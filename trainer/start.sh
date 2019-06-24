@@ -30,7 +30,7 @@ python prepare_training.py
 
 # Start training. ($1 is the integer of training steps provided by cacli)
 python -m object_detection.model_main \
-  --pipeline_config_path='faster_rcnn_resnet101_coco.config' \
+  --pipeline_config_path='pipeline.config' \
   --model_dir='checkpoint' \
   --num_train_steps=$1 \
   --alsologtostderr

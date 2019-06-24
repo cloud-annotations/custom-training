@@ -293,15 +293,17 @@ The final thing we need to do is inject our pipline with the amount of labels we
 pipeline = 'faster_rcnn_resnet101_coco.config'
 
 override_dict = {
-  'num_classes': len(labels),
   'train_input_path': 'train.record',
-  'fine_tune_checkpoint': 'checkpoint/model.ckpt',
+  'train_config.fine_tune_checkpoint': 'checkpoint/model.ckpt',
   'label_map_path': 'label_map.pbtxt'
 }
 
-configs = config_util.get_configs_from_pipeline_file(pipeline, config_override=override_dict)
+configs = config_util.get_configs_from_pipeline_file(pipeline)
+meta_arch = configs["model"].WhichOneof("model")
+override_dict['model.{}.num_classes'.format(meta_arch)] = len(labels)
+configs = config_util.merge_external_params_with_configs(configs, kwargs_dict=override_dict)
 pipeline_config = config_util.create_pipeline_proto_from_configs(configs)
-config_util.save_pipeline_config(pipeline_config, pipeline)
+config_util.save_pipeline_config(pipeline_config, '')
 ```
 > You can find this code in `override_pipeline.py`.
 

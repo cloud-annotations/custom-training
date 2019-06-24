@@ -24,13 +24,12 @@ with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
 labels = list({a['label'] for image in annotations.values() for a in image})
 
 override_dict = {
-  'num_classes': len(labels),
   'train_input_path': tf_record_path,
-  'fine_tune_checkpoint': os.path.join(checkpoint_path, 'model.ckpt'),
+  'train_config.fine_tune_checkpoint': os.path.join(checkpoint_path, 'model.ckpt'),
   'label_map_path': label_map_path
 }
 
 generate_label_map(labels, label_map_path)
 generate_tf_record(annotations, label_map_path, tf_record_path)
 download_checkpoint(MODEL_CHECKPOINT, checkpoint_path)
-override_pipeline(override_dict, MODEL_CONFIG)
+override_pipeline(MODEL_CONFIG, override_dict, num_classes=len(labels))
