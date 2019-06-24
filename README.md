@@ -48,6 +48,7 @@ The trainer folder should look like this:
   - object_detection-0.1.tar.gz
   - override_pipeline.py
   - prepare_training.py
+  - requirements.txt
   - slim-0.1.tar.gz
   - start.sh
 ```
@@ -94,8 +95,6 @@ When the training run begins it looks for and runs a file named `start.sh`. This
 
 ### Preparing the training data
 The TensorFlow Object Detection API expects our data to be in the format of TFRecord so we will need to write and run a conversion script.
-
-> **Note:** If you don't care about how this all works, feel free to download these scripts from my [GitHub](TODO).
 
 The format of the `_annotations.json` looks something like this:
 ```
@@ -156,7 +155,7 @@ The TFRecord format is a collection of serialized feature dicts, each looking so
 }
 ```
 
-First things first, let's generate a label map! Let's make a file named `generate_label_map.py`.
+We can access our annotations with the following code:
 ```python
 # Open _annotations.json, os.environ['DATA_DIR'] is the directory where all of 
 # our bucket data is stored.
@@ -167,11 +166,10 @@ with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
 # the labels into a set. We could also just use labels array, but this could
 # include labels that aren't used in the dataset.
 labels = list({a['label'] for image in annotations.values() for a in image})
-
-# Get a list of all images in our dataset.
-image_names = [image for image in annotations.keys()]
 ```
+> You can find this code in `prepare_training.py`.
 
+Once we have our annotations, we can generate a label map!
 ```python
 # Create a file named label_map.pbtxt
 with open('label_map.pbtxt', 'w') as file:
@@ -182,13 +180,16 @@ with open('label_map.pbtxt', 'w') as file:
     file.write('\tid: {}\n'.format(idx + 1)) # indexes must start at 1.
     file.write('}\n')
 ```
+> You can find this code in `generate_label_map.py`.
 
-Now that we have our label map, we can build our TFRecord. Let's make another file named `generate_tf_record.py`.
+Now that we have our label map, we can build our TFRecord.
 ```python
 # Create a train.record TFRecord file.
 with tf.python_io.TFRecordWriter('train.record') as writer:
   # Load the label map we created.
   label_map_dict = label_map_util.get_label_map_dict('label_map.pbtxt')
+  # Get a list of all images in our dataset.
+  image_names = [image for image in annotations.keys()]
 
   # Loop through all the training examples.
   for idx, image_name in enumerate(image_names):
@@ -255,6 +256,7 @@ with tf.python_io.TFRecordWriter('train.record') as writer:
     except ValueError:
       print('Invalid example, ignoring.')
 ```
+> You can find this code in `generate_tf_record.py`.
 
 > **Note:** There are a few extra things that we can do here, like shuffling the data and splitting it into training and validation sets.
 > We can also shard the TFRecord if we have a few thousand images. To learn more check out the docs [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md).
@@ -265,8 +267,7 @@ Instead of starting from nothing, we can add to what was already learned with ou
 
 We can get a download a checkpoint from the [model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md). 
 
-We'll write a script called `download_checkpoint.py` that will download the checkpoint to our training run.
-
+We can download the checkpoint to our training run with the following code:
 ```python
 download_base = 'http://download.tensorflow.org/models/object_detection/'
 model_file = 'faster_rcnn_resnet101_coco_2018_01_28.tar.gz'
@@ -282,11 +283,12 @@ with tarfile.open(model_file) as tar:
     if 'model.ckpt' in member.name:
       tar.extract(member, path='checkpoint')
 ```
+> You can find this code in `download_checkpoint.py`.
 
 > **Note:** This script is downloading the `faster r-cnn resnet101` model, make sure you download the model type you are training.
 
 ### Injecting the pipeline with proper values
-
+The final thing we need to do is inject our pipline with the amount of labels we have and where to find the label map, TFRecord and model checkpoint.
 ```python
 pipeline = 'faster_rcnn_resnet101_coco.config'
 
@@ -300,4 +302,23 @@ override_dict = {
 configs = config_util.get_configs_from_pipeline_file(pipeline, config_override=override_dict)
 pipeline_config = config_util.create_pipeline_proto_from_configs(configs)
 config_util.save_pipeline_config(pipeline_config, pipeline)
+```
+> You can find this code in `override_pipeline.py`.
+
+## Final checklist
+All the code in the trainer should work as-is.
+
+The only things you **MUST** do:
+- add the `object_detection-0.1.tar.gz` file to `trainer`
+- add the `slim-0.1.tar.gz` file to `trainer`
+
+(Optional) choose different model:
+- download alternative pipeline config
+- modify `MODEL_CHECKPOINT` in `prepare_training.py`
+- modify `MODEL_CONFIG` in `prepare_training.py`
+
+## Training the model
+When you're ready to train all you need to do is zip the `trainer` directory and run:
+```
+cacli train trainer.zip
 ```
