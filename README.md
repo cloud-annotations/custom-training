@@ -37,6 +37,7 @@ The time is in milliseconds, but it's important to note that it is the speed of 
 The accuracy is measured in `mAP` the higher the better.
 
 The default model that cacli trains is the `ssd mobilenet v1` model which has the following metrics:
+
 | Speed (ms) | mAP |
 | :--------: | :-: |
 |     30     |  21 |
@@ -44,6 +45,7 @@ The default model that cacli trains is the `ssd mobilenet v1` model which has th
 > **Note:** As a frame of reference, I get about 15fps on my MacBook Pro, ~66ms.
 
 In this walkthrough I'll be using the `faster r-cnn resnet101` model which has the following metrics:
+
 | Speed (ms) | mAP |
 | :--------: | :-: |
 |    106     |  32 |
