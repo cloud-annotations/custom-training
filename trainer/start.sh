@@ -30,8 +30,8 @@ python prepare_training.py
 
 # Start training. ($1 is the integer of training steps provided by cacli)
 python -m object_detection.model_main \
-  --pipeline_config_path='pipeline.config' \
-  --model_dir='checkpoint' \
+  --pipeline_config_path="pipeline.config" \
+  --model_dir="${RESULT_DIR}/checkpoint" \
   --num_train_steps=$1 \
   --alsologtostderr
 
