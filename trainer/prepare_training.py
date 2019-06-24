@@ -10,7 +10,8 @@ MODEL_CHECKPOINT = 'faster_rcnn_resnet101_coco_2018_01_28.tar.gz'
 MODEL_CONFIG = 'faster_rcnn_resnet101_coco.config'
 
 label_map_path = 'label_map.pbtxt'
-tf_record_path = 'train.record'
+train_record_path = 'train.record'
+val_record_path = 'val.record'
 checkpoint_path = 'checkpoint'
 
 # Open _annotations.json, os.environ['DATA_DIR'] is the directory where all of 
@@ -24,12 +25,13 @@ with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
 labels = list({a['label'] for image in annotations.values() for a in image})
 
 override_dict = {
-  'train_input_path': tf_record_path,
+  'train_input_path': train_record_path,
+  'eval_input_path': val_record_path,
   'train_config.fine_tune_checkpoint': os.path.join(checkpoint_path, 'model.ckpt'),
   'label_map_path': label_map_path
 }
 
 generate_label_map(labels, label_map_path)
-generate_tf_record(annotations, label_map_path, tf_record_path)
+generate_tf_record(annotations, label_map_path, train_record_path, val_record_path)
 download_checkpoint(MODEL_CHECKPOINT, checkpoint_path)
 override_pipeline(MODEL_CONFIG, override_dict, num_classes=len(labels))

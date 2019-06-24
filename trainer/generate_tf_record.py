@@ -9,16 +9,26 @@ import tensorflow as tf
 from object_detection.utils import dataset_util
 from object_detection.utils import label_map_util
 
-def generate_tf_record(annotations, label_map_path, output):
+def generate_tf_record(annotations, label_map_path, train_record, val_record):
+  # Get a list of all images in our dataset.
+  image_names = [image for image in annotations.keys()]
+  # Load the label map we created.
+  label_map = label_map_util.get_label_map_dict(label_map_path)
+
+  random.seed(42)
+  random.shuffle(image_names)
+  num_train = int(0.7 * len(image_names))
+  train_examples = image_names[:num_train]
+  val_examples = image_names[num_train:]
+
+  create_tf_record(annotations, train_examples, label_map, train_record)
+  create_tf_record(annotations, val_examples, label_map, val_record)
+
+def create_tf_record(annotations, image_names, label_map, output):
   # Create a train.record TFRecord file.
   with tf.python_io.TFRecordWriter(output) as writer:
-    # Load the label map we created.
-    label_map_dict = label_map_util.get_label_map_dict(label_map_path)
-    # Get a list of all images in our dataset.
-    image_names = [image for image in annotations.keys()]
-
     # Loop through all the training examples.
-    for idx, image_name in enumerate(image_names):
+    for image_name in image_names:
       # Make sure the image is actually a file
       img_path = os.path.join(os.environ['DATA_DIR'], image_name)    
       if not os.path.isfile(img_path):
@@ -58,7 +68,7 @@ def generate_tf_record(annotations, label_map_path, output):
         ymaxs.append(annotation['y2'])
         label = annotation['label']
         classes_text.append(label.encode('utf8'))
-        classes.append(label_map_dict[label])
+        classes.append(label_map[label])
       
       # Create the TFExample.
       try:
