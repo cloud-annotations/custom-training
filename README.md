@@ -36,7 +36,21 @@ Set up the packages:
 python setup.py sdist
 (cd slim && python setup.py sdist)
 ```
-This will create python packages `dist/object_detection-0.1.tar.gz`, `slim/dist/slim-0.1.tar.gz`
+This will create two python packages, `dist/object_detection-0.1.tar.gz` and `slim/dist/slim-0.1.tar.gz`, copy them to the `custom-training/trainer` directory.
+
+The trainer folder should look like this:
+```
++ trainer/
+  - download_checkpoint.py
+  - faster_rcnn_resnet101_coco.config
+  - generate_label_map.py
+  - generate_tf_record.py
+  - object_detection-0.1.tar.gz
+  - override_pipeline.py
+  - prepare_training.py
+  - slim-0.1.tar.gz
+  - start.sh
+```
 
 ## Choosing a model type
 Before moving forward we need to decide on a model type. You can find all available model types in the [model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md).
