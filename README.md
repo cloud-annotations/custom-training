@@ -131,9 +131,6 @@ The TFRecord format is a collection of serialized feature dicts, each looking so
 
 First things first, let's generate a label map! Let's make a file named `generate_label_map.py`.
 ```python
-import os
-import json
-
 # Open _annotations.json, os.environ['DATA_DIR'] is the directory where all of 
 # our bucket data is stored.
 with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
@@ -144,6 +141,11 @@ with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
 # include labels that aren't used in the dataset.
 labels = list({a['label'] for image in annotations.values() for a in image})
 
+# Get a list of all images in our dataset.
+image_names = [image for image in annotations.keys()]
+```
+
+```python
 # Create a file named label_map.pbtxt
 with open('label_map.pbtxt', 'w') as file:
   # Loop through all of the labels and write each label to the file with an id. 
@@ -156,30 +158,15 @@ with open('label_map.pbtxt', 'w') as file:
 
 Now that we have our label map, we can build our TFRecord. Let's make another file named `generate_tf_record.py`.
 ```python
-import os
-import json
-import random
-
-import tensorflow as tf
-
-from object_detection.utils import dataset_util
-from object_detection.utils import label_map_util
-
-with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
-  annotations = json.load(f)['annotations']
-
-image_files = [image for image in annotations.keys()]
-label_map_dict = label_map_util.get_label_map_dict('label_map.pbtxt')
-output_path = 'train.record'
-
-def create_tf_record(examples, label_map_dict, output_filename):
-  # Create a writer.
-  writer = tf.python_io.TFRecordWriter(output_filename)
+# Create a train.record TFRecord file.
+with tf.python_io.TFRecordWriter('train.record') as writer:
+  # Load the label map we created.
+  label_map_dict = label_map_util.get_label_map_dict('label_map.pbtxt')
 
   # Loop through all the training examples.
-  for idx, example in enumerate(examples):
+  for idx, image_name in enumerate(image_names):
     # Make sure the image is actually a file
-    img_path = os.path.join(os.environ['DATA_DIR'], example)    
+    img_path = os.path.join(os.environ['DATA_DIR'], image_name)    
     if not os.path.isfile(img_path):
       continue
 
@@ -204,21 +191,28 @@ def create_tf_record(examples, label_map_dict, output_filename):
     classes_text = []
     classes = []
 
-    for annotation in annotations[example]:
+    # The class text is the label name and the class is the id. If there are 3
+    # cats in the image and 1 dog, it may look something like this:
+    # classes_text = ['Cat', 'Cat', 'Dog', 'Cat']
+    # classes      = [  1  ,   1  ,   2  ,   1  ]
+
+    # For each image, loop through all the annotations and append their values.
+    for annotation in annotations[image_name]:
       xmins.append(annotation['x'])
       xmaxs.append(annotation['x2'])
       ymins.append(annotation['y'])
       ymaxs.append(annotation['y2'])
-      classes_text.append(annotation['label'].encode('utf8'))
-      label_map_dict[annotation['label']]
-      classes.append(label_map_dict[annotation['label']])
+      label = annotation['label']
+      classes_text.append(label.encode('utf8'))
+      classes.append(label_map_dict[label])
     
+    # Create the TFExample.
     try:
       tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
         'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(example.encode('utf8')),
-        'image/source_id': dataset_util.bytes_feature(example.encode('utf8')),
+        'image/filename': dataset_util.bytes_feature(image_name.encode('utf8')),
+        'image/source_id': dataset_util.bytes_feature(image_name.encode('utf8')),
         'image/encoded': dataset_util.bytes_feature(encoded_jpg),
         'image/format': dataset_util.bytes_feature('jpeg'.encode('utf8')),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
@@ -229,15 +223,10 @@ def create_tf_record(examples, label_map_dict, output_filename):
         'image/object/class/label': dataset_util.int64_list_feature(classes),
       }))
       if tf_example:
+        # Write the TFExample to the TFRecord.
         writer.write(tf_example.SerializeToString())
     except ValueError:
       print('Invalid example, ignoring.')
-
-  # Close the writer.
-  writer.close()
-
-# Create the records.
-create_tf_record(image_files, label_map_dict, output_path)
 ```
 
 > **Note:** There are a few extra things that we can do here, like shuffling the data and splitting it into training and validation sets.
@@ -272,17 +261,10 @@ with tarfile.open(tar_path) as tar:
 ### Injecting the pipeline with proper values
 
 ```python
-from object_detection.utils import config_util
-
-with open(os.path.join(os.environ['DATA_DIR'], '_annotations.json')) as f:
-  annotations = json.load(f)['annotations']
-
-num_classes = len({a['label'] for image in annotations.values() for a in image})
-
 pipeline = 'faster_rcnn_resnet101_coco.config'
 
 override_dict = {
-  'num_classes': num_classes,
+  'num_classes': len(labels),
   'train_input_path': 'train.record',
   'fine_tune_checkpoint': 'checkpoint/model.ckpt',
   'label_map_path': 'label_map.pbtxt'
