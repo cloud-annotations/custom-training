@@ -249,7 +249,7 @@ opener = urllib.request.URLopener()
 opener.retrieve(download_base + model_file, model_file)
 
 # Extract all the `model.ckpt` files.
-with tarfile.open(tar_path) as tar:
+with tarfile.open(model_file) as tar:
   for member in tar.getmembers():
     member.name = os.path.basename(member.name)
     if 'model.ckpt' in member.name:

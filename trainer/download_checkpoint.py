@@ -1,13 +1,18 @@
-download_base = 'http://download.tensorflow.org/models/object_detection/'
-model_file = 'faster_rcnn_resnet101_coco_2018_01_28.tar.gz'
+import os
+import tarfile
 
-# Download the checkpoint
-opener = urllib.request.URLopener()
-opener.retrieve(download_base + model_file, model_file)
+import six.moves.urllib as urllib
 
-# Extract all the `model.ckpt` files.
-with tarfile.open(tar_path) as tar:
-  for member in tar.getmembers():
-    member.name = os.path.basename(member.name)
-    if 'model.ckpt' in member.name:
-      tar.extract(member, path='checkpoint')
+def download_checkpoint(model, output):
+  download_base = 'http://download.tensorflow.org/models/object_detection/'
+
+  # Download the checkpoint
+  opener = urllib.request.URLopener()
+  opener.retrieve(download_base + model, model)
+
+  # Extract all the `model.ckpt` files.
+  with tarfile.open(model) as tar:
+    for member in tar.getmembers():
+      member.name = os.path.basename(member.name)
+      if 'model.ckpt' in member.name:
+        tar.extract(member, path=output)
