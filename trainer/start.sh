@@ -14,7 +14,7 @@ tar -xvzf slim-0.1.tar.gz
 
 # Move the object_detection and slim packages.
 cp -rf object_detection-0.1/object_detection .
-cp -rf slim-0.1/slim .
+cp -rf slim-0.1 slim/
 
 # Cleanup. (not really necessary)
 rm -rf object_detection-0.1.tar.gz
