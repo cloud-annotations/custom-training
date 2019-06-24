@@ -1,6 +1,9 @@
 # Using Cloud Annotations to train models from TensorFlow's Object Detection model zoo
 
-clone the repo:
+clone the following repos:
+```
+git clone https://github.com/cloud-annotations/custom-training.git
+```
 ```
 git clone https://github.com/tensorflow/models.git
 ```
@@ -18,12 +21,22 @@ move into the research directory:
 cd models/research/
 ```
 
+compile the protobufs:
+```
+protoc object_detection/protos/*.proto --python_out=.
+```
+
+> **Note:** You will need to have `protoc` installed
+> **macOS + Homebrew** If you have Homebrew installed, run: `brew install protobuf`
+> **Windows / Linux / macOS** The simplest way to install the protocol compiler is to download a pre-built binary from the [protobuf release page](https://github.com/protocolbuffers/protobuf/releases)
+> You can find pre-built binaries in zip packages: `protoc-{version}-{platform}.zip`
+
 Set up the packages:
 ```
 python setup.py sdist
 (cd slim && python setup.py sdist)
 ```
-This will create python packages dist/object_detection-0.1.tar.gz, slim/dist/slim-0.1.tar.gz
+This will create python packages `dist/object_detection-0.1.tar.gz`, `slim/dist/slim-0.1.tar.gz`
 
 ## Choosing a model type
 Before moving forward we need to decide on a model type. You can find all available model types in the [model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md).
