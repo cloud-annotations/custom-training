@@ -269,7 +269,7 @@ with tarfile.open(tar_path) as tar:
 
 > **Note:** This script is downloading the `faster r-cnn resnet101` model, make sure you download the model type you are training.
 
-### Inject pipeline with proper values
+### Injecting the pipeline with proper values
 
 ```python
 from object_detection.utils import config_util
