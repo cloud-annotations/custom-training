@@ -12,6 +12,16 @@ pip install --user --no-deps -r requirements.txt
 tar -xvzf object_detection-0.1.tar.gz
 tar -xvzf slim-0.1.tar.gz
 
+# Move the object_detection and slim packages.
+cp -rf object_detection-0.1/object_detection .
+cp -rf slim-0.1/slim .
+
+# Cleanup. (not really necessary)
+rm -rf object_detection-0.1.tar.gz
+rm -rf object_detection-0.1
+rm -rf slim-0.1.tar.gz
+rm -rf slim-0.1
+
 # Add slim to our python path.
 export PYTHONPATH=${PWD}/slim
 
