@@ -12,4 +12,4 @@ def override_pipeline(pipeline, override_dict, num_classes=0):
 
   configs = config_util.merge_external_params_with_configs(configs, kwargs_dict=override_dict)
   pipeline_config = config_util.create_pipeline_proto_from_configs(configs)
-  config_util.save_pipeline_config(pipeline_config, '')
+  config_util.save_pipeline_config(pipeline_config, os.environ['RESULT_DIR'])
