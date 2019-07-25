@@ -9,7 +9,7 @@ from override_pipeline import override_pipeline
 MODEL_CHECKPOINT = 'faster_rcnn_resnet101_coco_2018_01_28.tar.gz'
 MODEL_CONFIG = 'faster_rcnn_resnet101_coco.config'
 
-label_map_path = 'label_map.pbtxt'
+label_map_path = os.path.join(os.environ['RESULT_DIR'], 'label_map.pbtxt')
 train_record_path = 'train.record'
 val_record_path = 'val.record'
 checkpoint_path = 'checkpoint'
