@@ -322,5 +322,5 @@ The only things you **MUST** do:
 ## Training the model
 When you're ready to train all you need to do is zip the `trainer` directory and run:
 ```
-cacli train trainer.zip
+cacli train --script=trainer.zip
 ```
